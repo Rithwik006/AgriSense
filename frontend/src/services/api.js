@@ -1,0 +1,81 @@
+import axios from 'axios';
+
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Crops Service
+export const getCrops = async (params = {}) => {
+  const response = await api.get('/crops', { params });
+  return response.data;
+};
+
+export const createCrop = async (cropData) => {
+  const response = await api.post('/crops', cropData);
+  return response.data;
+};
+
+export const updateCrop = async (id, cropData) => {
+  const response = await api.put(`/crops/${id}`, cropData);
+  return response.data;
+};
+
+export const deleteCrop = async (id) => {
+  const response = await api.delete(`/crops/${id}`);
+  return response.data;
+};
+
+// Soil Service
+export const analyzeSoil = async (soilData) => {
+  const response = await api.post('/soil/analyze', soilData);
+  return response.data;
+};
+
+export const getSoilReports = async () => {
+  const response = await api.get('/soil/reports');
+  return response.data;
+};
+
+// Weather Service
+export const getWeatherRecords = async () => {
+  const response = await api.get('/weather');
+  return response.data;
+};
+
+export const fetchLiveWeather = async (locationData) => {
+  const response = await api.post('/weather/fetch', locationData);
+  return response.data;
+};
+
+export const saveManualWeather = async (weatherData) => {
+  const response = await api.post('/weather/manual', weatherData);
+  return response.data;
+};
+
+// Advisory Service
+export const generateAdvisory = async (advisoryData) => {
+  const response = await api.post('/advisory/generate', advisoryData);
+  return response.data;
+};
+
+export const getAdvisories = async () => {
+  const response = await api.get('/advisory');
+  return response.data;
+};
+
+// Reports & Dashboard Service
+export const getDashboardData = async () => {
+  const response = await api.get('/reports/dashboard');
+  return response.data;
+};
+
+export const getExportUrl = (exportType) => {
+  return `${API_BASE_URL}/reports/${exportType}`;
+};
+
+export default api;
