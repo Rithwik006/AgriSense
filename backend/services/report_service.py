@@ -13,7 +13,7 @@ class ReportService:
         active_crops = db.query(Crop).filter(Crop.status.in_(["Planned", "Growing"])).count()
         soil_reports_count = db.query(SoilReport).count()
         weather_records_count = db.query(WeatherRecord).count()
-        total_advisories = db.query(Advisories := Advisory).count()
+        total_advisories = db.query(Advisory).count()
         high_priority_advisories = db.query(Advisory).filter(Advisory.priority == "High").count()
 
         # Crop category breakdown
@@ -125,28 +125,86 @@ class ReportService:
         return FileManager.write_csv("advisories_export.csv", fieldnames, rows)
 
     @staticmethod
-    def export_all_json(db: Session) -> str:
-        crops = [c.__dict__ for c in db.query(Crop).all()]
-        soil = [s.__dict__ for s in db.query(SoilReport).all()]
-        weather = [w.__dict__ for w in db.query(WeatherRecord).all()]
-        advisories = [a.__dict__ for a in db.query(Advisory).all()]
+    def _crop_to_dict(c: Crop) -> Dict[str, Any]:
+        return {
+            "id": c.id,
+            "crop_name": c.crop_name,
+            "category": c.category,
+            "season": c.season,
+            "area": c.area,
+            "planting_date": c.planting_date,
+            "expected_harvest_date": c.expected_harvest_date,
+            "status": c.status,
+            "notes": c.notes or "",
+            "created_at": c.created_at.isoformat() if c.created_at else None
+        }
 
-        # clean internal _sa_instance_state
-        for dataset in [crops, soil, weather, advisories]:
-            for item in dataset:
-                item.pop("_sa_instance_state", None)
+    @staticmethod
+    def _soil_to_dict(s: SoilReport) -> Dict[str, Any]:
+        return {
+            "id": s.id,
+            "location": s.location,
+            "ph": s.ph,
+            "nitrogen": s.nitrogen,
+            "phosphorus": s.phosphorus,
+            "potassium": s.potassium,
+            "moisture": s.moisture,
+            "overall_condition": s.overall_condition,
+            "analyzed_at": s.analyzed_at.isoformat() if s.analyzed_at else None
+        }
+
+    @staticmethod
+    def _weather_to_dict(w: WeatherRecord) -> Dict[str, Any]:
+        return {
+            "id": w.id,
+            "location": w.location,
+            "temperature": w.temperature,
+            "humidity": w.humidity,
+            "rainfall": w.rainfall,
+            "wind_speed": w.wind_speed,
+            "weather_description": w.weather_description,
+            "recorded_at": w.recorded_at.isoformat() if w.recorded_at else None
+        }
+
+    @staticmethod
+    def _advisory_to_dict(a: Advisory) -> Dict[str, Any]:
+        return {
+            "id": a.id,
+            "crop_name": a.crop_name,
+            "soil_condition": a.soil_condition,
+            "weather_condition": a.weather_condition,
+            "recommendation": a.recommendation,
+            "priority": a.priority,
+            "reason": a.reason,
+            "created_at": a.created_at.isoformat() if a.created_at else None
+        }
+
+    @staticmethod
+    def export_all_json(db: Session) -> str:
+        metrics = ReportService.get_dashboard_metrics(db)
+        summary = {
+            **metrics,
+            "recent_crops": [ReportService._crop_to_dict(c) for c in metrics["recent_crops"]],
+            "recent_soil_reports": [ReportService._soil_to_dict(s) for s in metrics["recent_soil_reports"]],
+            "recent_weather": [ReportService._weather_to_dict(w) for w in metrics["recent_weather"]],
+            "recent_advisories": [ReportService._advisory_to_dict(a) for a in metrics["recent_advisories"]],
+        }
+
+        crops = [ReportService._crop_to_dict(c) for c in db.query(Crop).all()]
+        soil = [ReportService._soil_to_dict(s) for s in db.query(SoilReport).all()]
+        weather = [ReportService._weather_to_dict(w) for w in db.query(WeatherRecord).all()]
+        advisories = [ReportService._advisory_to_dict(a) for a in db.query(Advisory).all()]
 
         export_data = {
             "app": "AgriSense – Farming Advisory Simulator",
             "generated_at": datetime.utcnow().isoformat(),
-            "summary": ReportService.get_dashboard_metrics(db),
+            "summary": summary,
             "crops": crops,
             "soil_reports": soil,
             "weather_records": weather,
             "advisories": advisories
         }
 
-        # Use FileManager json writer
         return FileManager.write_json("complete_agrisense_report.json", export_data)
 
     @staticmethod

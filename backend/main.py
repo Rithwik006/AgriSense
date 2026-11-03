@@ -1,34 +1,14 @@
-from fastapi import FastAPI
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from backend.database import engine, Base, SessionLocal
 from backend.models import Crop, SoilReport, WeatherRecord, Advisory
 from backend.routers import crops, soil, weather, advisory, reports
 
-app = FastAPI(
-    title="AgriSense – Farming Advisory Simulator API",
-    description="Full-stack FastAPI backend for Crop Management, Soil Analysis, Weather Monitoring, and Rule-based Farming Advisories.",
-    version="1.0.0"
-)
-
-# CORS configuration to allow React dev server access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows http://localhost:5173 and all dev clients
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include Routers
-app.include_router(crops.router)
-app.include_router(soil.router)
-app.include_router(weather.router)
-app.include_router(advisory.router)
-app.include_router(reports.router)
-
-@app.on_event("startup")
 def startup_db_init():
     """Initializes database schema and populates seed sample data if empty."""
     Base.metadata.create_all(bind=engine)
@@ -83,12 +63,66 @@ def startup_db_init():
     finally:
         db.close()
 
-@app.get("/")
-def root():
-    return {
-        "app": "AGRI SENSE – FARMING ADVISORY SIMULATOR",
-        "status": "Online",
-        "docs": "/docs",
-        "backend": "FastAPI",
-        "database": "SQLite"
-    }
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    startup_db_init()
+    yield
+
+app = FastAPI(
+    title="AgriSense – Farming Advisory Simulator API",
+    description="Full-stack FastAPI backend for Crop Management, Soil Analysis, Weather Monitoring, and Rule-based Farming Advisories.",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS configuration
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+if cors_origins_env:
+    allowed_origins = [orig.strip() for orig in cors_origins_env.split(",") if orig.strip()]
+    allow_creds = True
+else:
+    allowed_origins = ["*"]
+    allow_creds = False
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=allow_creds,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API Routers
+app.include_router(crops.router)
+app.include_router(soil.router)
+app.include_router(weather.router)
+app.include_router(advisory.router)
+app.include_router(reports.router)
+
+# Mount static frontend if dist exists
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIST = os.path.join(BASE_DIR, "frontend", "dist")
+
+if os.path.exists(FRONTEND_DIST):
+    assets_path = os.path.join(FRONTEND_DIST, "assets")
+    if os.path.exists(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+
+    @app.get("/{full_path:path}")
+    def serve_spa(full_path: str):
+        if full_path.startswith("api/") or full_path in ["docs", "openapi.json", "redoc"]:
+            raise HTTPException(status_code=404, detail="API route not found")
+        file_path = os.path.join(FRONTEND_DIST, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(FRONTEND_DIST, "index.html"))
+else:
+    @app.get("/")
+    def root():
+        return {
+            "app": "AGRI SENSE – FARMING ADVISORY SIMULATOR",
+            "status": "Online",
+            "docs": "/docs",
+            "backend": "FastAPI",
+            "database": "SQLite"
+        }

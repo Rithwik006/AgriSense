@@ -164,3 +164,52 @@ group pbl/
 - [x] Weather module queries live Open-Meteo API and switches gracefully to manual fallback on network failure.
 - [x] Advisory Engine generates priority-ranked recommendations based on crop and environmental parameters.
 - [x] File exports successfully produce CSV, JSON, and TXT files in `data/exports/`.
+
+---
+
+## 🚀 Production Deployment Guide
+
+AgriSense supports both **Unified Single-Port Deployment** (FastAPI serves both the REST API and the React SPA) and **Separated Deployment** (Frontend on Vercel/Netlify + Backend on Render/Railway).
+
+### Option A: Unified Cloud Deployment (Recommended - Render / Railway)
+
+Because FastAPI is configured with automatic SPA static serving, you can run the entire full-stack app on a single free-tier cloud service!
+
+1. Push this repository to GitHub.
+2. In [Render](https://render.com) or [Railway](https://railway.app), create a new **Web Service** from your repository.
+3. Use the following configuration:
+   - **Environment**: `Python 3`
+   - **Build Command**:
+     ```bash
+     cd frontend && npm install && npm run build && cd .. && pip install -r requirements.txt
+     ```
+   - **Start Command**:
+     ```bash
+     uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+     ```
+4. Click **Deploy**. The app will be live on your assigned `.onrender.com` or `.up.railway.app` URL with both frontend and backend functional!
+
+---
+
+### Option B: Docker Container Deployment
+
+Run the complete multi-stage build locally or on any VPS (DigitalOcean, AWS, Linode):
+
+```bash
+docker compose up --build -d
+```
+The application will be live at `http://localhost:8000` with persistent SQLite database mounted in `./data/`.
+
+---
+
+### Option C: Separated Deployment (Vercel Frontend + Render Backend)
+
+1. **Deploy Backend to Render/Railway**:
+   - Start Command: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+   - Set environment variable: `CORS_ORIGINS=https://your-frontend.vercel.app`
+2. **Deploy Frontend to Vercel**:
+   - Set Root Directory to `frontend`.
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Set environment variable: `VITE_API_BASE_URL=https://your-backend.onrender.com/api`
+

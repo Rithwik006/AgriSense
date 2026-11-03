@@ -33,14 +33,15 @@ class WeatherService:
         Includes fallback handling if the API or network fails.
         """
         try:
-            async with httpx.AsyncClient(timeout=8.0) as client:
+            timeout_cfg = httpx.Timeout(5.0, connect=3.0)
+            async with httpx.AsyncClient(timeout=timeout_cfg) as client:
                 # 1. Geocoding lookup
-                geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={httpx.URL(location).raw_path.decode()}&count=1&language=en&format=json"
-                geo_resp = await client.get(geo_url)
+                geo_resp = await client.get(
+                    "https://geocoding-api.open-meteo.com/v1/search",
+                    params={"name": location.strip(), "count": 1, "language": "en", "format": "json"}
+                )
                 
-                lat, lon, found_name = 20.5937, 78.9629, location  # Default to India center if not found
-                if geo_resp.status_code == 20:
-                    pass
+                lat, lon, found_name = 20.5937, 78.9629, location  # Default coordinates if not found
                 if geo_resp.status_code == 200 and geo_resp.json().get("results"):
                     first_res = geo_resp.json()["results"][0]
                     lat = first_res["latitude"]
@@ -48,11 +49,15 @@ class WeatherService:
                     found_name = f"{first_res.get('name', location)}, {first_res.get('country', '')}".strip(", ")
 
                 # 2. Weather Forecast API call
-                weather_url = (
-                    f"https://api.open-meteo.com/v1/forecast?"
-                    f"latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,rain,wind_speed_10m,weather_code"
+                forecast_params = {
+                    "latitude": lat,
+                    "longitude": lon,
+                    "current": "temperature_2m,relative_humidity_2m,rain,wind_speed_10m,weather_code"
+                }
+                w_resp = await client.get(
+                    "https://api.open-meteo.com/v1/forecast",
+                    params=forecast_params
                 )
-                w_resp = await client.get(weather_url)
                 w_resp.raise_for_status()
                 w_data = w_resp.json().get("current", {})
 

@@ -1,0 +1,13 @@
+services:
+  agrisense:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agrisense-app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

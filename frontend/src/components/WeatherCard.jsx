@@ -6,7 +6,7 @@ export default function WeatherCard({ weather, isLive = false, isFallback = fals
 
   return (
     <div className="card" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)', color: '#ffffff' }}>
-      <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <MapPin size={18} color="#93c5fd" />
           <span style={{ fontSize: '18px', fontWeight: 700 }}>{weather.location}</span>
