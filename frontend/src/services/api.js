@@ -10,6 +10,31 @@ const api = axios.create({
   },
 });
 
+// Automatically attach JWT token to every request if available
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('agrisense_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Auth Service
+export const loginUser = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const registerUser = async (userData) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
+};
+
 // Crops Service
 export const getCrops = async (params = {}) => {
   const response = await api.get('/crops', { params });

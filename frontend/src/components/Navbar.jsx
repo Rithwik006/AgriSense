@@ -1,9 +1,12 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
-import { Calendar, Cpu } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { Calendar, Cpu, LogOut, User, LogIn } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -24,6 +27,11 @@ export default function Navbar() {
     day: 'numeric'
   });
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <header className="navbar">
       <h1 className="navbar-title">{getPageTitle()}</h1>
@@ -32,11 +40,50 @@ export default function Navbar() {
           <Calendar size={16} />
           <span>{currentDate}</span>
         </div>
-        <div className="status-indicator">
-          <div className="status-dot"></div>
-          <Cpu size={14} />
-          <span>System Active</span>
-        </div>
+
+        {isAuthenticated && user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderLeft: '1px solid var(--border-color)', paddingLeft: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary-dark)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '13px'
+              }}>
+                {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
+                  {user.full_name}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  {user.farm_name || 'AgriSense Member'}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="btn btn-secondary btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+              title="Sign Out of Farm Session"
+            >
+              <LogOut size={14} color="#dc2626" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        ) : (
+          <Link to="/login" className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <LogIn size={14} />
+            <span>Sign In</span>
+          </Link>
+        )}
       </div>
     </header>
   );

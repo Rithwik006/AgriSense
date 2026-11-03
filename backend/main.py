@@ -6,8 +6,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from backend.database import engine, Base, SessionLocal
-from backend.models import Crop, SoilReport, WeatherRecord, Advisory
-from backend.routers import crops, soil, weather, advisory, reports
+from backend.models import Crop, SoilReport, WeatherRecord, Advisory, User
+from backend.routers import crops, soil, weather, advisory, reports, auth
+from backend.services.auth_service import AuthService
 
 def startup_db_init():
     """Initializes database schema and populates seed sample data if empty."""
@@ -59,6 +60,15 @@ def startup_db_init():
             ]
             db.add_all(sample_advisories)
 
+        if db.query(User).count() == 0:
+            demo_user = User(
+                full_name="Rithwik Goud",
+                email="demo@agrisense.com",
+                hashed_password=AuthService.hash_password("password123"),
+                farm_name="AgriSense Pioneer Farm"
+            )
+            db.add(demo_user)
+
         db.commit()
     finally:
         db.close()
@@ -93,6 +103,7 @@ app.add_middleware(
 )
 
 # Include API Routers
+app.include_router(auth.router)
 app.include_router(crops.router)
 app.include_router(soil.router)
 app.include_router(weather.router)

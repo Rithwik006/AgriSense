@@ -137,3 +137,36 @@ class DashboardStats(BaseModel):
     recent_soil_reports: List[SoilReportResponse]
     recent_weather: List[WeatherRecordResponse]
     recent_advisories: List[AdvisoryResponse]
+
+# ==================== AUTH SCHEMAS ====================
+class UserRegister(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=100)
+    email: str = Field(..., min_length=5, max_length=150)
+    password: str = Field(..., min_length=6, max_length=100)
+    farm_name: Optional[str] = "My Farm"
+
+    @field_validator("email")
+    def email_valid(cls, v):
+        clean = v.strip().lower()
+        if "@" not in clean or "." not in clean:
+            raise ValueError("Please provide a valid email address.")
+        return clean
+
+class UserLogin(BaseModel):
+    email: str = Field(..., min_length=3)
+    password: str = Field(..., min_length=1)
+
+class UserResponse(BaseModel):
+    id: int
+    full_name: str
+    email: str
+    farm_name: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
