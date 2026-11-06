@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+from sqlalchemy import text
 from backend.database import engine, Base, SessionLocal
 from backend.models import Crop, SoilReport, WeatherRecord, Advisory, User
 from backend.routers import crops, soil, weather, advisory, reports, auth
@@ -13,6 +14,9 @@ from backend.services.auth_service import AuthService
 def startup_db_init():
     """Initializes database schema and populates seed sample data if empty."""
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_users_lower_email ON users(LOWER(email));"))
+        conn.commit()
     db = SessionLocal()
     try:
         if db.query(Crop).count() == 0:

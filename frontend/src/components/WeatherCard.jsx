@@ -1,7 +1,9 @@
 import React from 'react';
 import { CloudSun, Thermometer, Droplets, CloudRain, Wind, MapPin } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function WeatherCard({ weather, isLive = false, isFallback = false }) {
+  const { t } = useLanguage();
   if (!weather) return null;
 
   return (
@@ -13,7 +15,7 @@ export default function WeatherCard({ weather, isLive = false, isFallback = fals
         </div>
         {isLive && (
           <span className="badge" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', color: '#ffffff' }}>
-            {isFallback ? 'Manual / Offline' : 'Live Open-Meteo'}
+            {isFallback ? t('offlineBadge', 'Offline Simulation') : t('liveBadge', 'Live Open-Meteo')}
           </span>
         )}
       </div>
@@ -32,7 +34,7 @@ export default function WeatherCard({ weather, isLive = false, isFallback = fals
         <div style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px', color: '#bfdbfe' }}>
             <Droplets size={14} />
-            Humidity
+            {t('humidity')}
           </div>
           <div style={{ fontSize: '16px', fontWeight: 700, marginTop: '2px' }}>{weather.humidity}%</div>
         </div>
@@ -40,7 +42,7 @@ export default function WeatherCard({ weather, isLive = false, isFallback = fals
         <div style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px', color: '#bfdbfe' }}>
             <CloudRain size={14} />
-            Rainfall
+            {t('rainfall')}
           </div>
           <div style={{ fontSize: '16px', fontWeight: 700, marginTop: '2px' }}>{weather.rainfall} mm</div>
         </div>
@@ -48,7 +50,7 @@ export default function WeatherCard({ weather, isLive = false, isFallback = fals
         <div style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px', color: '#bfdbfe' }}>
             <Wind size={14} />
-            Wind
+            {t('windSpeed')}
           </div>
           <div style={{ fontSize: '16px', fontWeight: 700, marginTop: '2px' }}>{weather.wind_speed} km/h</div>
         </div>

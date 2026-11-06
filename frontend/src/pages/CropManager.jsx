@@ -5,9 +5,12 @@ import CropForm from '../components/CropForm';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AlertMessage from '../components/AlertMessage';
-import { Plus, Search, Filter, ArrowUpDown } from 'lucide-react';
+import VoiceInput from '../components/VoiceInput';
+import { useLanguage } from '../context/LanguageContext';
+import { Plus, Search, Filter, ArrowUpDown, Sprout } from 'lucide-react';
 
 export default function CropManager() {
+  const { t } = useLanguage();
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -111,32 +114,39 @@ export default function CropManager() {
       <div className="card" style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
           
-          {/* Search Box */}
-          <div style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
+          {/* Search Box with Voice Input */}
+          <div style={{ position: 'relative', flex: '1', minWidth: '260px', display: 'flex', alignItems: 'center' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Search crop name..."
+              placeholder={t('searchCrops')}
               className="form-input"
-              style={{ paddingLeft: '38px' }}
+              style={{ paddingLeft: '38px', paddingRight: '40px' }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+              <VoiceInput
+                inline
+                onTranscript={(text) => setSearch(text)}
+              />
+            </div>
           </div>
 
           {/* Filters */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <select className="form-select" style={{ width: '130px' }} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-              <option value="">All Categories</option>
+              <option value="">{t('allCategories')}</option>
               <option value="Cereal">Cereal</option>
               <option value="Vegetable">Vegetable</option>
               <option value="Fruit">Fruit</option>
               <option value="Cash Crop">Cash Crop</option>
               <option value="Pulse">Pulse</option>
+              <option value="Oilseed">Oilseed</option>
             </select>
 
             <select className="form-select" style={{ width: '130px' }} value={seasonFilter} onChange={(e) => setSeasonFilter(e.target.value)}>
-              <option value="">All Seasons</option>
+              <option value="">{t('allSeasons')}</option>
               <option value="Kharif">Kharif</option>
               <option value="Rabi">Rabi</option>
               <option value="Zaid">Zaid</option>
@@ -144,14 +154,14 @@ export default function CropManager() {
             </select>
 
             <select className="form-select" style={{ width: '130px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="">All Statuses</option>
+              <option value="">{t('allStatuses')}</option>
               <option value="Planned">Planned</option>
               <option value="Growing">Growing</option>
               <option value="Harvested">Harvested</option>
               <option value="Completed">Completed</option>
             </select>
 
-            <select className="form-select" style={{ width: '140px' }} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <select className="form-select" style={{ width: '150px' }} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
               <option value="newest">Sort: Newest First</option>
               <option value="oldest">Sort: Oldest First</option>
               <option value="name">Sort: Name (A-Z)</option>
@@ -160,7 +170,7 @@ export default function CropManager() {
 
             <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
               <Plus size={18} />
-              Add Crop
+              {t('addCrop')}
             </button>
           </div>
         </div>
@@ -169,11 +179,15 @@ export default function CropManager() {
       {/* Main Table */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">All Crop Records ({crops.length})</h3>
+          <h3 className="card-title">
+            <Sprout size={20} color="var(--primary)" />
+            {t('manageCrops')}
+          </h3>
+          <span className="badge badge-success">{crops.length} crops listed</span>
         </div>
 
         {loading ? (
-          <LoadingSpinner message="Loading crops from database..." />
+          <LoadingSpinner message="Fetching crop records..." />
         ) : (
           <CropTable
             crops={crops}
@@ -184,7 +198,11 @@ export default function CropManager() {
       </div>
 
       {/* Add Crop Modal */}
-      <Modal isOpen={isAddModalOpen} title="Register New Crop" onClose={() => setIsAddModalOpen(false)}>
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title={t('addCrop')}
+      >
         <CropForm
           onSubmit={handleCreate}
           onCancel={() => setIsAddModalOpen(false)}
@@ -193,27 +211,39 @@ export default function CropManager() {
       </Modal>
 
       {/* Edit Crop Modal */}
-      <Modal isOpen={!!editingCrop} title={`Edit Crop: ${editingCrop?.crop_name}`} onClose={() => setEditingCrop(null)}>
-        <CropForm
-          initialData={editingCrop}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditingCrop(null)}
-          isLoading={submitting}
-        />
+      <Modal
+        isOpen={!!editingCrop}
+        onClose={() => setEditingCrop(null)}
+        title={t('editCrop')}
+      >
+        {editingCrop && (
+          <CropForm
+            initialData={editingCrop}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingCrop(null)}
+            isLoading={submitting}
+          />
+        )}
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={!!deletingCropId} title="Confirm Deletion" onClose={() => setDeletingCropId(null)}>
-        <p style={{ marginBottom: '20px', color: 'var(--text-main)' }}>
-          Are you sure you want to delete this crop record? This action cannot be undone.
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          <button className="btn btn-secondary" onClick={() => setDeletingCropId(null)} disabled={submitting}>
-            Cancel
-          </button>
-          <button className="btn btn-danger" onClick={handleDeleteConfirm} disabled={submitting}>
-            {submitting ? 'Deleting...' : 'Delete Crop'}
-          </button>
+      <Modal
+        isOpen={!!deletingCropId}
+        onClose={() => setDeletingCropId(null)}
+        title={t('deleteCrop')}
+      >
+        <div style={{ padding: '8px 0' }}>
+          <p style={{ color: 'var(--text-main)', marginBottom: '20px' }}>
+            {t('confirmDelete')}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button className="btn btn-secondary" onClick={() => setDeletingCropId(null)} disabled={submitting}>
+              {t('cancel')}
+            </button>
+            <button className="btn btn-danger" onClick={handleDeleteConfirm} disabled={submitting}>
+              {submitting ? 'Deleting...' : t('deleteCrop')}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

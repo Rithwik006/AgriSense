@@ -1,15 +1,18 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Sprout, TestTube2, CloudSun, Lightbulb, FileSpreadsheet, Leaf } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Sidebar() {
+  const { t } = useLanguage();
+
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/crops', label: 'Crop Manager', icon: Sprout },
-    { path: '/soil', label: 'Soil Analyzer', icon: TestTube2 },
-    { path: '/weather', label: 'Weather', icon: CloudSun },
-    { path: '/advisory', label: 'Advisory Engine', icon: Lightbulb },
-    { path: '/reports', label: 'Reports & Analytics', icon: FileSpreadsheet },
+    { path: '/', labelKey: 'dashboard', fallback: 'Dashboard', icon: LayoutDashboard },
+    { path: '/crops', labelKey: 'crops', fallback: 'Crop Manager', icon: Sprout },
+    { path: '/soil', labelKey: 'soil', fallback: 'Soil Analyzer', icon: TestTube2 },
+    { path: '/weather', labelKey: 'weather', fallback: 'Weather', icon: CloudSun },
+    { path: '/advisory', labelKey: 'advisory', fallback: 'Advisory Engine', icon: Lightbulb },
+    { path: '/reports', labelKey: 'reports', fallback: 'Reports & Analytics', icon: FileSpreadsheet },
   ];
 
   return (
@@ -19,8 +22,8 @@ export default function Sidebar() {
           <Leaf size={22} />
         </div>
         <div>
-          <div className="sidebar-title">AGRI SENSE</div>
-          <div className="sidebar-sub">Farming Advisory Simulator</div>
+          <div className="sidebar-title">{t('appTitle', 'AGRI SENSE')}</div>
+          <div className="sidebar-sub">{t('appSub', 'Farming Advisory Simulator')}</div>
         </div>
       </div>
 
@@ -35,15 +38,15 @@ export default function Sidebar() {
               end={item.path === '/'}
             >
               <Icon size={18} />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey, item.fallback)}</span>
             </NavLink>
           );
         })}
       </nav>
 
       <div className="sidebar-footer">
-        <div>AgriSense System v1.0</div>
-        <div style={{ opacity: 0.8, fontSize: '11px', marginTop: '4px' }}>Powered by FastAPI & React</div>
+        <div>{t('appTitle', 'AgriSense')} System v1.0</div>
+        <div style={{ opacity: 0.8, fontSize: '11px', marginTop: '4px' }}>FastAPI & React Precision Platform</div>
       </div>
     </aside>
   );

@@ -7,9 +7,11 @@ import { CategoryChart, StatusChart } from '../components/Charts';
 import CropTable from '../components/CropTable';
 import AdvisoryCard from '../components/AdvisoryCard';
 import WeatherCard from '../components/WeatherCard';
+import { useLanguage } from '../context/LanguageContext';
 import { Sprout, Activity, TestTube2, CloudSun, Lightbulb, ShieldAlert } from 'lucide-react';
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,19 +41,19 @@ export default function Dashboard() {
     <div>
       {/* Stat Cards Grid */}
       <div className="grid-cols-4">
-        <StatCard title="Total Crops" value={data.total_crops} icon={Sprout} color="#16a34a" subtitle="Registered crops" />
-        <StatCard title="Active Crops" value={data.active_crops} icon={Activity} color="#0284c7" subtitle="Planned or growing" />
-        <StatCard title="Soil Reports" value={data.soil_reports} icon={TestTube2} color="#8b5cf6" subtitle="Soil tests analyzed" />
-        <StatCard title="Weather Records" value={data.weather_records} icon={CloudSun} color="#eab308" subtitle="Climate logs recorded" />
-        <StatCard title="Total Advisories" value={data.total_advisories} icon={Lightbulb} color="#10b981" subtitle="Generated advisories" />
-        <StatCard title="High Priority" value={data.high_priority_advisories} icon={ShieldAlert} color="#ef4444" subtitle="Urgent action required" />
+        <StatCard title={t('totalCrops')} value={data.total_crops} icon={Sprout} color="#16a34a" subtitle="Registered crops" />
+        <StatCard title={t('activeCrops')} value={data.active_crops} icon={Activity} color="#0284c7" subtitle="Planned or growing" />
+        <StatCard title={t('soilReports')} value={data.soil_reports} icon={TestTube2} color="#8b5cf6" subtitle="Soil tests analyzed" />
+        <StatCard title={t('weatherRecords')} value={data.weather_records} icon={CloudSun} color="#eab308" subtitle="Climate logs recorded" />
+        <StatCard title={t('totalAdvisories')} value={data.total_advisories} icon={Lightbulb} color="#10b981" subtitle="Generated advisories" />
+        <StatCard title={t('highPriority')} value={data.high_priority_advisories} icon={ShieldAlert} color="#ef4444" subtitle="Urgent action required" />
       </div>
 
       {/* Analytics Charts Row */}
       <div className="grid-cols-2">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Crops Distribution by Category</h3>
+            <h3 className="card-title">{t('cropsByCategory')}</h3>
           </div>
           <div style={{ height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CategoryChart categoryData={data.crops_by_category} />
@@ -60,7 +62,7 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Crops Count by Status</h3>
+            <h3 className="card-title">{t('cropsByStatus')}</h3>
           </div>
           <div style={{ height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <StatusChart statusData={data.crops_by_status} />
@@ -73,16 +75,16 @@ export default function Dashboard() {
         {/* Recent Crops */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Recent Crop Additions</h3>
+            <h3 className="card-title">{t('recentCrops')}</h3>
           </div>
           {data.recent_crops && data.recent_crops.length > 0 ? (
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Crop</th>
-                    <th>Category</th>
-                    <th>Status</th>
+                    <th>{t('cropName')}</th>
+                    <th>{t('category')}</th>
+                    <th>{t('status')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -97,19 +99,19 @@ export default function Dashboard() {
               </table>
             </div>
           ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No recent crops.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{t('noCrops')}</p>
           )}
         </div>
 
         {/* Recent Weather */}
         <div>
           <div className="card-header" style={{ marginBottom: '12px' }}>
-            <h3 className="card-title">Latest Weather Log</h3>
+            <h3 className="card-title">{t('latestWeather')}</h3>
           </div>
           {data.recent_weather && data.recent_weather.length > 0 ? (
             <WeatherCard weather={data.recent_weather[0]} />
           ) : (
-            <div className="card"><p style={{ color: 'var(--text-muted)' }}>No weather records.</p></div>
+            <div className="card"><p style={{ color: 'var(--text-muted)' }}>{t('noWeather')}</p></div>
           )}
         </div>
       </div>
@@ -117,7 +119,7 @@ export default function Dashboard() {
       {/* Recent Advisories */}
       <div className="card" style={{ marginTop: '24px' }}>
         <div className="card-header">
-          <h3 className="card-title">Latest Farming Advisories</h3>
+          <h3 className="card-title">{t('latestAdvisories')}</h3>
         </div>
         {data.recent_advisories && data.recent_advisories.length > 0 ? (
           <div>
@@ -126,7 +128,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-          <p style={{ color: 'var(--text-muted)' }}>No advisories generated yet.</p>
+          <p style={{ color: 'var(--text-muted)' }}>{t('noAdvisories')}</p>
         )}
       </div>
     </div>

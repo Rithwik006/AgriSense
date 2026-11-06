@@ -1,7 +1,9 @@
 import React from 'react';
-import { TestTube2, CheckCircle2, AlertTriangle, Droplets, Leaf } from 'lucide-react';
+import { TestTube2, CheckCircle2, Leaf } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SoilResult({ report, analysis }) {
+  const { t } = useLanguage();
   if (!report || !analysis) return null;
 
   const getConditionColor = (cond) => {
@@ -15,7 +17,7 @@ export default function SoilResult({ report, analysis }) {
       <div className="card-header">
         <h3 className="card-title">
           <TestTube2 size={20} color="var(--primary)" />
-          Soil Analysis Results — {report.location}
+          {t('soilResults')} — {report.location}
         </h3>
         <span
           className="badge"
@@ -32,31 +34,31 @@ export default function SoilResult({ report, analysis }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px', marginBottom: '20px' }}>
         <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>pH Value</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>{t('phValue', 'pH Value')}</div>
           <div style={{ fontSize: '22px', fontWeight: 800, color: getConditionColor(analysis.ph_condition) }}>{report.ph}</div>
           <div style={{ fontSize: '12px', fontWeight: 600 }}>{analysis.ph_condition}</div>
         </div>
 
         <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Nitrogen (N)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>{t('nitrogen', 'Nitrogen (N)')}</div>
           <div style={{ fontSize: '22px', fontWeight: 800 }}>{report.nitrogen} <span style={{ fontSize: '11px' }}>mg/kg</span></div>
           <div style={{ fontSize: '12px', fontWeight: 600, color: getConditionColor(analysis.nitrogen_condition) }}>{analysis.nitrogen_condition}</div>
         </div>
 
         <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Phosphorus (P)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>{t('phosphorus', 'Phosphorus (P)')}</div>
           <div style={{ fontSize: '22px', fontWeight: 800 }}>{report.phosphorus} <span style={{ fontSize: '11px' }}>mg/kg</span></div>
           <div style={{ fontSize: '12px', fontWeight: 600, color: getConditionColor(analysis.phosphorus_condition) }}>{analysis.phosphorus_condition}</div>
         </div>
 
         <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Potassium (K)</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>{t('potassium', 'Potassium (K)')}</div>
           <div style={{ fontSize: '22px', fontWeight: 800 }}>{report.potassium} <span style={{ fontSize: '11px' }}>mg/kg</span></div>
           <div style={{ fontSize: '12px', fontWeight: 600, color: getConditionColor(analysis.potassium_condition) }}>{analysis.potassium_condition}</div>
         </div>
 
         <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Moisture</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>{t('moisture', 'Moisture')}</div>
           <div style={{ fontSize: '22px', fontWeight: 800 }}>{report.moisture}%</div>
           <div style={{ fontSize: '12px', fontWeight: 600, color: getConditionColor(analysis.moisture_condition) }}>{analysis.moisture_condition}</div>
         </div>
@@ -65,7 +67,7 @@ export default function SoilResult({ report, analysis }) {
       <div>
         <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Leaf size={16} color="var(--primary)" />
-          Actionable Soil Suggestions & Fertilizer Guidance
+          {t('soilSuggestions')}
         </h4>
         <ul style={{ listStyleType: 'none', padding: 0 }}>
           {analysis.suggestions.map((sug, idx) => (

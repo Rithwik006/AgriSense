@@ -3,9 +3,19 @@ import { analyzeSoil, getSoilReports } from '../services/api';
 import SoilResult from '../components/SoilResult';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AlertMessage from '../components/AlertMessage';
-import { TestTube2, History, Send, MapPin } from 'lucide-react';
+import VoiceInput from '../components/VoiceInput';
+import { useLanguage } from '../context/LanguageContext';
+import { TestTube2, History, Send, MapPin, Sparkles } from 'lucide-react';
+
+const SOIL_PRESETS = [
+  { label: 'Fertile Alluvial (Delta Basin)', ph: '6.8', n: '45.0', p: '28.0', k: '190.0', m: '52.0' },
+  { label: 'Acidic Red Soil (Telangana/AP)', ph: '5.2', n: '18.0', p: '12.0', k: '95.0', m: '28.0' },
+  { label: 'Alkaline Black Soil (Deccan)', ph: '8.2', n: '32.0', p: '16.0', k: '210.0', m: '42.0' },
+  { label: 'Dry Sandy Loam (Arid Zone)', ph: '7.4', n: '12.0', p: '8.0', k: '80.0', m: '18.0' }
+];
 
 export default function SoilAnalyzer() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     location: 'Main Farm Sector 1',
     ph: '6.5',
@@ -40,6 +50,17 @@ export default function SoilAnalyzer() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleApplyPreset = (preset) => {
+    setFormData((prev) => ({
+      ...prev,
+      ph: preset.ph,
+      nitrogen: preset.n,
+      phosphorus: preset.p,
+      potassium: preset.k,
+      moisture: preset.m
+    }));
   };
 
   const handleAnalyze = async (e) => {
@@ -88,13 +109,40 @@ export default function SoilAnalyzer() {
           <div className="card-header">
             <h3 className="card-title">
               <TestTube2 size={20} color="var(--primary)" />
-              Soil Testing Input Parameters
+              {t('soilTitle')}
             </h3>
+          </div>
+
+          {/* Quick Presets */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Sparkles size={14} color="var(--primary)" />
+              <span>Quick Soil Sample Presets</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {SOIL_PRESETS.map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '11px', padding: '4px 8px' }}
+                  onClick={() => handleApplyPreset(p)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <form onSubmit={handleAnalyze}>
             <div className="form-group">
-              <label className="form-label">Field / Location Name *</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="form-label">{t('fieldLocation')} *</label>
+                <VoiceInput
+                  inline
+                  onTranscript={(text) => setFormData((prev) => ({ ...prev, location: text }))}
+                />
+              </div>
               <div style={{ position: 'relative' }}>
                 <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
@@ -102,7 +150,7 @@ export default function SoilAnalyzer() {
                   name="location"
                   className="form-input"
                   style={{ paddingLeft: '36px' }}
-                  placeholder="e.g. North Plot Sector A"
+                  placeholder="e.g. North Plot Sector A, Warangal"
                   value={formData.location}
                   onChange={handleChange}
                   required
@@ -112,7 +160,7 @@ export default function SoilAnalyzer() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group">
-                <label className="form-label">pH Level (0.0 - 14.0) *</label>
+                <label className="form-label">{t('phValue')} *</label>
                 <input
                   type="number"
                   step="0.1"
@@ -127,7 +175,7 @@ export default function SoilAnalyzer() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Moisture Level (%) *</label>
+                <label className="form-label">{t('moisture')} *</label>
                 <input
                   type="number"
                   step="0.1"
@@ -142,15 +190,15 @@ export default function SoilAnalyzer() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
               <div className="form-group">
-                <label className="form-label">Nitrogen (N)</label>
+                <label className="form-label">{t('nitrogen')} *</label>
                 <input
                   type="number"
                   step="0.1"
+                  min="0"
                   name="nitrogen"
                   className="form-input"
-                  placeholder="mg/kg"
                   value={formData.nitrogen}
                   onChange={handleChange}
                   required
@@ -158,13 +206,13 @@ export default function SoilAnalyzer() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Phosphorus (P)</label>
+                <label className="form-label">{t('phosphorus')} *</label>
                 <input
                   type="number"
                   step="0.1"
+                  min="0"
                   name="phosphorus"
                   className="form-input"
-                  placeholder="mg/kg"
                   value={formData.phosphorus}
                   onChange={handleChange}
                   required
@@ -172,13 +220,13 @@ export default function SoilAnalyzer() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Potassium (K)</label>
+                <label className="form-label">{t('potassium')} *</label>
                 <input
                   type="number"
                   step="0.1"
+                  min="0"
                   name="potassium"
                   className="form-input"
-                  placeholder="mg/kg"
                   value={formData.potassium}
                   onChange={handleChange}
                   required
@@ -186,69 +234,72 @@ export default function SoilAnalyzer() {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={loading}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }} disabled={loading}>
               <Send size={16} />
-              {loading ? 'Analyzing Soil Logic...' : 'Analyze Soil'}
+              {loading ? t('analyzing') : t('analyzeBtn')}
             </button>
           </form>
         </div>
 
-        {/* Live Analysis Output */}
+        {/* Results Panel */}
         <div>
           {loading ? (
-            <LoadingSpinner message="Executing rule-based soil analyzer in Python..." />
+            <div className="card" style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LoadingSpinner message={t('analyzing')} />
+            </div>
           ) : currentResult ? (
             <SoilResult report={currentResult.report} analysis={currentResult.analysis} />
           ) : (
-            <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>
-              <TestTube2 size={48} color="var(--primary)" style={{ opacity: 0.4, marginBottom: '12px' }} />
-              <h4>No Soil Analysis Executed Yet</h4>
-              <p style={{ fontSize: '13px', marginTop: '6px' }}>
-                Fill in the soil parameters on the left and click "Analyze Soil" to receive actionable fertility results and fertilizer suggestions.
+            <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <TestTube2 size={48} color="var(--primary)" style={{ margin: '0 auto 16px' }} />
+              <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)' }}>No Soil Test Loaded</h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '6px' }}>
+                Fill in the soil chemical values on the left or select a sample preset to run the NPK fertility matrix.
               </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Historical Soil Reports */}
+      {/* History Table */}
       <div className="card" style={{ marginTop: '24px' }}>
         <div className="card-header">
           <h3 className="card-title">
-            <History size={18} />
-            Historical Soil Testing Log ({history.length})
+            <History size={18} color="var(--primary)" />
+            {t('soilHistory')}
           </h3>
+          <span className="badge badge-success">{history.length} samples analyzed</span>
         </div>
 
         {historyLoading ? (
-          <LoadingSpinner message="Fetching soil report history..." />
+          <LoadingSpinner message="Loading soil history..." />
         ) : history.length > 0 ? (
           <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Location</th>
+                  <th>{t('fieldLocation')}</th>
                   <th>pH</th>
-                  <th>N (mg/kg)</th>
-                  <th>P (mg/kg)</th>
-                  <th>K (mg/kg)</th>
-                  <th>Moisture</th>
-                  <th>Overall Condition</th>
+                  <th>{t('nitrogen')}</th>
+                  <th>{t('phosphorus')}</th>
+                  <th>{t('potassium')}</th>
+                  <th>{t('moisture')}</th>
+                  <th>{t('status')}</th>
+                  <th>{t('plantingDate', 'Analyzed At')}</th>
                 </tr>
               </thead>
               <tbody>
-                {history.map((rep) => (
-                  <tr key={rep.id}>
-                    <td>#{rep.id}</td>
-                    <td style={{ fontWeight: 600 }}>{rep.location}</td>
-                    <td>{rep.ph}</td>
-                    <td>{rep.nitrogen}</td>
-                    <td>{rep.phosphorus}</td>
-                    <td>{rep.potassium}</td>
-                    <td>{rep.moisture}%</td>
-                    <td>
-                      <span className="badge badge-success">{rep.overall_condition}</span>
+                {history.map((h) => (
+                  <tr key={h.id}>
+                    <td style={{ fontWeight: 700 }}>{h.location}</td>
+                    <td><b>{h.ph}</b></td>
+                    <td>{h.nitrogen}</td>
+                    <td>{h.phosphorus}</td>
+                    <td>{h.potassium}</td>
+                    <td>{h.moisture}%</td>
+                    <td><span className="badge badge-primary">{h.overall_condition}</span></td>
+                    <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {new Date(h.analyzed_at).toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -256,7 +307,7 @@ export default function SoilAnalyzer() {
             </table>
           </div>
         ) : (
-          <p style={{ color: 'var(--text-muted)' }}>No historical soil reports found.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No soil reports analyzed yet.</p>
         )}
       </div>
     </div>

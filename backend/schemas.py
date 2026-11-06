@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
+from backend.utils.validators import validate_email
 
 # ==================== CROP SCHEMAS ====================
 class CropBase(BaseModel):
@@ -148,13 +149,18 @@ class UserRegister(BaseModel):
     @field_validator("email")
     def email_valid(cls, v):
         clean = v.strip().lower()
-        if "@" not in clean or "." not in clean:
-            raise ValueError("Please provide a valid email address.")
+        is_valid, err_msg = validate_email(clean)
+        if not is_valid:
+            raise ValueError(err_msg)
         return clean
 
 class UserLogin(BaseModel):
     email: str = Field(..., min_length=3)
     password: str = Field(..., min_length=1)
+
+    @field_validator("email")
+    def email_clean(cls, v):
+        return v.strip().lower()
 
 class UserResponse(BaseModel):
     id: int

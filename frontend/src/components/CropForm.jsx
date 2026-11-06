@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import VoiceInput from './VoiceInput';
+import { useLanguage } from '../context/LanguageContext';
 
-const CATEGORIES = ['Cereal', 'Vegetable', 'Fruit', 'Cash Crop', 'Pulse'];
+const CATEGORIES = ['Cereal', 'Vegetable', 'Fruit', 'Cash Crop', 'Pulse', 'Oilseed'];
 const SEASONS = ['Kharif', 'Rabi', 'Zaid', 'Year Round'];
 const STATUSES = ['Planned', 'Growing', 'Harvested', 'Completed'];
 
 export default function CropForm({ initialData = null, onSubmit, onCancel, isLoading }) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     crop_name: '',
     category: 'Cereal',
@@ -60,6 +63,7 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
 
     onSubmit({
       ...formData,
+      crop_name: formData.crop_name.trim(),
       area: parseFloat(formData.area)
     });
   };
@@ -69,12 +73,18 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="form-group">
-        <label className="form-label">Crop Name *</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <label className="form-label">{t('cropName')} *</label>
+          <VoiceInput
+            inline
+            onTranscript={(text) => setFormData((prev) => ({ ...prev, crop_name: text }))}
+          />
+        </div>
         <input
           type="text"
           name="crop_name"
           className="form-input"
-          placeholder="e.g. Wheat, Rice, Tomato"
+          placeholder="e.g. Wheat, Rice, Tomato, Cotton"
           value={formData.crop_name}
           onChange={handleChange}
           required
@@ -83,7 +93,7 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div className="form-group">
-          <label className="form-label">Category *</label>
+          <label className="form-label">{t('category')} *</label>
           <select name="category" className="form-select" value={formData.category} onChange={handleChange}>
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>{cat}</option>
@@ -92,7 +102,7 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
         </div>
 
         <div className="form-group">
-          <label className="form-label">Season *</label>
+          <label className="form-label">{t('season')} *</label>
           <select name="season" className="form-select" value={formData.season} onChange={handleChange}>
             {SEASONS.map((s) => (
               <option key={s} value={s}>{s}</option>
@@ -103,10 +113,11 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div className="form-group">
-          <label className="form-label">Area (Acres) *</label>
+          <label className="form-label">{t('areaAcres')} *</label>
           <input
             type="number"
             step="0.1"
+            min="0.1"
             name="area"
             className="form-input"
             placeholder="e.g. 5.5"
@@ -117,7 +128,7 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
         </div>
 
         <div className="form-group">
-          <label className="form-label">Status *</label>
+          <label className="form-label">{t('status')} *</label>
           <select name="status" className="form-select" value={formData.status} onChange={handleChange}>
             {STATUSES.map((st) => (
               <option key={st} value={st}>{st}</option>
@@ -128,7 +139,7 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div className="form-group">
-          <label className="form-label">Planting Date *</label>
+          <label className="form-label">{t('plantingDate')} *</label>
           <input
             type="date"
             name="planting_date"
@@ -140,7 +151,7 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
         </div>
 
         <div className="form-group">
-          <label className="form-label">Expected Harvest Date *</label>
+          <label className="form-label">{t('expectedHarvest')} *</label>
           <input
             type="date"
             name="expected_harvest_date"
@@ -153,25 +164,32 @@ export default function CropForm({ initialData = null, onSubmit, onCancel, isLoa
       </div>
 
       <div className="form-group">
-        <label className="form-label">Notes / Field Details</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <label className="form-label">{t('notes')}</label>
+          <VoiceInput
+            inline
+            onTranscript={(text) => setFormData((prev) => ({
+              ...prev,
+              notes: prev.notes ? `${prev.notes} ${text}` : text
+            }))}
+          />
+        </div>
         <textarea
           name="notes"
           rows={3}
-          className="form-textarea"
-          placeholder="e.g. Variety type, soil plot name, fertilizer schedule..."
+          className="form-input"
+          placeholder="Field observations, pest treatment logs, fertilizer schedules..."
           value={formData.notes}
           onChange={handleChange}
         />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
-        {onCancel && (
-          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={isLoading}>
-            Cancel
-          </button>
-        )}
+        <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={isLoading}>
+          {t('cancel')}
+        </button>
         <button type="submit" className="btn btn-primary" disabled={isLoading}>
-          {isLoading ? 'Saving...' : initialData ? 'Update Crop' : 'Add Crop'}
+          {isLoading ? 'Saving...' : t('saveCrop')}
         </button>
       </div>
     </form>

@@ -1,7 +1,10 @@
 import React from 'react';
-import { Edit2, Trash2, Calendar, MapPin } from 'lucide-react';
+import { Edit2, Trash2, Calendar } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CropTable({ crops, onEdit, onDelete }) {
+  const { t } = useLanguage();
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Growing': return <span className="badge badge-success">Growing</span>;
@@ -26,14 +29,14 @@ export default function CropTable({ crops, onEdit, onDelete }) {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Crop Name</th>
-            <th>Category</th>
-            <th>Season</th>
-            <th>Area (Acres)</th>
-            <th>Planting Date</th>
-            <th>Expected Harvest</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>{t('cropName')}</th>
+            <th>{t('category')}</th>
+            <th>{t('season')}</th>
+            <th>{t('areaAcres')}</th>
+            <th>{t('plantingDate')}</th>
+            <th>{t('expectedHarvest')}</th>
+            <th>{t('status')}</th>
+            <th>{t('actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -57,16 +60,16 @@ export default function CropTable({ crops, onEdit, onDelete }) {
                   <button
                     className="btn btn-secondary btn-sm"
                     onClick={() => onEdit(crop)}
-                    title="Edit Crop"
+                    title={t('editCrop')}
                   >
-                    <Edit2 size={14} />
+                    <Edit2 size={13} />
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => onDelete(crop.id)}
-                    title="Delete Crop"
+                    title={t('deleteCrop')}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={13} />
                   </button>
                 </div>
               </td>

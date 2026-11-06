@@ -1,26 +1,29 @@
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Calendar, Cpu, LogOut, User, LogIn } from 'lucide-react';
+import { Calendar, LogOut, User, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { t, language } = useLanguage();
 
   const getPageTitle = () => {
     switch (location.pathname) {
-      case '/': return 'Farming Overview & Analytics Dashboard';
-      case '/crops': return 'Crop Management System';
-      case '/soil': return 'Soil Health & NPK Analyzer';
-      case '/weather': return 'Weather Forecast & Climate Module';
-      case '/advisory': return 'Rule-Based Farming Advisory Engine';
-      case '/reports': return 'Reports, Analytics & Data Export';
-      default: return 'AgriSense Simulator';
+      case '/': return `${t('dashboard')} — ${t('appSub')}`;
+      case '/crops': return `${t('crops')} — ${t('manageCrops')}`;
+      case '/soil': return `${t('soil')} — ${t('soilTitle')}`;
+      case '/weather': return `${t('weather')} — ${t('weatherTitle')}`;
+      case '/advisory': return `${t('advisory')} — ${t('advisoryTitle')}`;
+      case '/reports': return `${t('reports')} — ${t('reportsTitle')}`;
+      default: return `${t('appTitle')} — ${t('appSub')}`;
     }
   };
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const currentDate = new Date().toLocaleDateString(language === 'en' ? 'en-US' : `${language}-IN`, {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -36,6 +39,9 @@ export default function Navbar() {
     <header className="navbar">
       <h1 className="navbar-title">{getPageTitle()}</h1>
       <div className="navbar-right">
+        {/* Multilingual Selector */}
+        <LanguageSelector compact />
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)' }}>
           <Calendar size={16} />
           <span>{currentDate}</span>
@@ -72,16 +78,16 @@ export default function Navbar() {
               onClick={handleLogout}
               className="btn btn-secondary btn-sm"
               style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
-              title="Sign Out of Farm Session"
+              title={t('signOut')}
             >
               <LogOut size={14} color="#dc2626" />
-              <span>Sign Out</span>
+              <span>{t('signOut')}</span>
             </button>
           </div>
         ) : (
           <Link to="/login" className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <LogIn size={14} />
-            <span>Sign In</span>
+            <span>{t('signIn')}</span>
           </Link>
         )}
       </div>

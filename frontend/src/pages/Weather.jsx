@@ -3,10 +3,28 @@ import { fetchLiveWeather, saveManualWeather, getWeatherRecords } from '../servi
 import WeatherCard from '../components/WeatherCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AlertMessage from '../components/AlertMessage';
-import { CloudSun, Search, Edit3, MapPin, History, RefreshCw } from 'lucide-react';
+import VoiceInput from '../components/VoiceInput';
+import { useLanguage } from '../context/LanguageContext';
+import { CloudSun, Search, Edit3, MapPin, History, RefreshCw, Compass } from 'lucide-react';
+
+const POPULAR_HUBS = [
+  { name: 'Hyderabad', region: 'Telangana' },
+  { name: 'Warangal', region: 'Telangana' },
+  { name: 'Vijayawada', region: 'Andhra Pradesh' },
+  { name: 'Guntur', region: 'Andhra Pradesh' },
+  { name: 'Ludhiana', region: 'Punjab' },
+  { name: 'Amritsar', region: 'Punjab' },
+  { name: 'Pune', region: 'Maharashtra' },
+  { name: 'Nagpur', region: 'Maharashtra' },
+  { name: 'Bengaluru', region: 'Karnataka' },
+  { name: 'Chennai', region: 'Tamil Nadu' },
+  { name: 'New Delhi', region: 'Delhi NCR' },
+  { name: 'Lucknow', region: 'Uttar Pradesh' }
+];
 
 export default function Weather() {
-  const [locationInput, setLocationInput] = useState('New Delhi');
+  const { t, currentLangObj } = useLanguage();
+  const [locationInput, setLocationInput] = useState('Hyderabad');
   const [activeWeather, setActiveWeather] = useState(null);
   const [isFallback, setIsFallback] = useState(false);
   const [records, setRecords] = useState([]);
@@ -44,24 +62,33 @@ export default function Weather() {
     fetchRecords();
   }, []);
 
-  const handleFetchWeather = async (e) => {
-    e.preventDefault();
-    if (!locationInput.trim()) return;
+  const handleFetchWeather = async (targetLoc) => {
+    const query = (typeof targetLoc === 'string' ? targetLoc : locationInput).trim();
+    if (!query) return;
 
     try {
       setLoading(true);
       setAlert(null);
-      const res = await fetchLiveWeather({ location: locationInput.trim() });
+      const res = await fetchLiveWeather({ location: query });
       setActiveWeather(res.record);
       setIsFallback(res.is_fallback);
       if (res.is_fallback) {
-        setAlert({ type: 'info', message: 'Open-Meteo API unreachable or returned fallback estimation. Switched to offline weather record.' });
+        setAlert({
+          type: 'info',
+          message: `${t('offlineBadge')}: Meteorological estimate calculated for '${res.record.location}'.`
+        });
       } else {
-        setAlert({ type: 'success', message: `Live weather data fetched for '${res.record.location}' and saved in database.` });
+        setAlert({
+          type: 'success',
+          message: `Live Open-Meteo weather telemetry fetched for '${res.record.location}' and saved.`
+        });
       }
       fetchRecords();
     } catch (err) {
-      setAlert({ type: 'error', message: 'Failed to fetch weather data. Showing manual entry option.' });
+      setAlert({
+        type: 'error',
+        message: 'Weather service request failed. You can switch to manual entry if needed.'
+      });
       setIsManualMode(true);
     } finally {
       setLoading(false);
@@ -103,7 +130,7 @@ export default function Weather() {
           <div className="card-header">
             <h3 className="card-title">
               <CloudSun size={20} color="var(--primary)" />
-              {isManualMode ? 'Manual Weather Entry' : 'Live Open-Meteo Lookup'}
+              {isManualMode ? t('manualWeatherTitle') : t('weatherTitle')}
             </h3>
             <button
               type="button"
@@ -111,36 +138,76 @@ export default function Weather() {
               onClick={() => setIsManualMode(!isManualMode)}
             >
               <Edit3 size={14} />
-              {isManualMode ? 'Switch to Live Lookup' : 'Manual Entry'}
+              {isManualMode ? t('switchToLive') : t('switchToManual')}
             </button>
           </div>
 
           {!isManualMode ? (
-            <form onSubmit={handleFetchWeather}>
+            <form onSubmit={(e) => { e.preventDefault(); handleFetchWeather(); }}>
               <div className="form-group">
-                <label className="form-label">City or Region Location *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label">{t('locationQuery')} *</label>
+                  <VoiceInput
+                    inline
+                    onTranscript={(spokenText) => {
+                      setLocationInput(spokenText);
+                      handleFetchWeather(spokenText);
+                    }}
+                  />
+                </div>
                 <div style={{ position: 'relative' }}>
                   <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input
                     type="text"
                     className="form-input"
                     style={{ paddingLeft: '36px' }}
-                    placeholder="e.g. New Delhi, Punjab, London"
+                    placeholder="e.g. Hyderabad, Warangal, Ludhiana, Pune..."
                     value={locationInput}
                     onChange={(e) => setLocationInput(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }} disabled={loading}>
-                <RefreshCw size={16} />
-                {loading ? 'Querying Open-Meteo API...' : 'Fetch Live Weather'}
+
+              {/* Quick Regional Hub Selection */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Compass size={14} />
+                  <span>{t('popularRegions')}</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {POPULAR_HUBS.map((hub) => (
+                    <button
+                      key={hub.name}
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '11px', padding: '4px 8px' }}
+                      onClick={() => {
+                        setLocationInput(hub.name);
+                        handleFetchWeather(hub.name);
+                      }}
+                    >
+                      {hub.name} ({hub.region})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                {loading ? t('fetchingWeather') : t('fetchWeatherBtn')}
               </button>
             </form>
           ) : (
             <form onSubmit={handleManualSubmit}>
               <div className="form-group">
-                <label className="form-label">Location / Farm Station Name *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label">{t('fieldLocation')} *</label>
+                  <VoiceInput
+                    inline
+                    onTranscript={(text) => setManualData({ ...manualData, location: text })}
+                  />
+                </div>
                 <input
                   type="text"
                   className="form-input"
@@ -152,7 +219,7 @@ export default function Weather() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Temperature (°C) *</label>
+                  <label className="form-label">{t('temperature')} (°C) *</label>
                   <input
                     type="number"
                     step="0.1"
@@ -163,7 +230,7 @@ export default function Weather() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Humidity (%) *</label>
+                  <label className="form-label">{t('humidity')} (%) *</label>
                   <input
                     type="number"
                     step="0.1"
@@ -177,7 +244,7 @@ export default function Weather() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Rainfall (mm) *</label>
+                  <label className="form-label">{t('rainfall')} (mm) *</label>
                   <input
                     type="number"
                     step="0.1"
@@ -188,7 +255,7 @@ export default function Weather() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Wind Speed (km/h) *</label>
+                  <label className="form-label">{t('windSpeed')} (km/h) *</label>
                   <input
                     type="number"
                     step="0.1"
@@ -201,11 +268,10 @@ export default function Weather() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Weather Condition Description *</label>
+                <label className="form-label">{t('weatherDesc')} *</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="e.g. Clear Sky, Moderate Rain"
                   value={manualData.weather_description}
                   onChange={(e) => setManualData({ ...manualData, weather_description: e.target.value })}
                   required
@@ -213,68 +279,76 @@ export default function Weather() {
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                {loading ? 'Saving Record...' : 'Save Weather Record'}
+                {t('saveCrop', 'Save Weather Record')}
               </button>
             </form>
           )}
         </div>
 
-        {/* Display Active Weather Card */}
+        {/* Display Card Panel */}
         <div>
           {loading ? (
-            <LoadingSpinner message="Retrieving climate data..." />
+            <div className="card" style={{ height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LoadingSpinner message={t('fetchingWeather')} />
+            </div>
           ) : activeWeather ? (
             <WeatherCard weather={activeWeather} isLive={true} isFallback={isFallback} />
           ) : (
-            <div className="card" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ color: 'var(--text-muted)' }}>Search for a location to view weather metrics.</p>
+            <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+              <CloudSun size={48} color="var(--primary)" style={{ margin: '0 auto 12px' }} />
+              <p style={{ color: 'var(--text-muted)' }}>
+                {t('locationQuery')} to fetch current conditions.
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Historical Weather Records */}
+      {/* Historical Weather Logs */}
       <div className="card" style={{ marginTop: '24px' }}>
         <div className="card-header">
           <h3 className="card-title">
-            <History size={18} />
-            Saved Weather Logs ({records.length})
+            <History size={18} color="var(--primary)" />
+            {t('weatherHistory')}
           </h3>
+          <span className="badge badge-success">{records.length} records logged</span>
         </div>
 
         {recordsLoading ? (
-          <LoadingSpinner message="Loading weather logs..." />
+          <LoadingSpinner message="Loading records history..." />
         ) : records.length > 0 ? (
           <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Location</th>
-                  <th>Temperature</th>
-                  <th>Humidity</th>
-                  <th>Rainfall</th>
-                  <th>Wind Speed</th>
-                  <th>Condition</th>
+                  <th>{t('location')}</th>
+                  <th>{t('temperature')}</th>
+                  <th>{t('humidity')}</th>
+                  <th>{t('rainfall')}</th>
+                  <th>{t('windSpeed')}</th>
+                  <th>{t('weatherDesc')}</th>
+                  <th>{t('plantingDate', 'Recorded At')}</th>
                 </tr>
               </thead>
               <tbody>
                 {records.map((r) => (
-                  <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => setActiveWeather(r)}>
-                    <td>#{r.id}</td>
-                    <td style={{ fontWeight: 600 }}>{r.location}</td>
-                    <td style={{ fontWeight: 700, color: '#1e40af' }}>{r.temperature}°C</td>
+                  <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => { setActiveWeather(r); setIsFallback(false); }}>
+                    <td style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{r.location}</td>
+                    <td><b>{r.temperature}°C</b></td>
                     <td>{r.humidity}%</td>
                     <td>{r.rainfall} mm</td>
                     <td>{r.wind_speed} km/h</td>
-                    <td><span className="badge badge-info">{r.weather_description}</span></td>
+                    <td><span className="badge badge-primary">{r.weather_description}</span></td>
+                    <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {new Date(r.recorded_at).toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <p style={{ color: 'var(--text-muted)' }}>No saved weather records found.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{t('noWeather')}</p>
         )}
       </div>
     </div>
